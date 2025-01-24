@@ -1,149 +1,96 @@
 const Category = require('../models/Category');
 const SubCategory = require('../models/SubCategory');
 const Item = require('../models/Item');
+const { catchAsync, AppError } = require('../middleware/errorHandler')
 
-exports.createCategory = async (req, res) => {
-    try {
-        const newCategory = new Category(req.body);
+exports.createCategory = catchAsync(async (req, res, next) => {
+    const newCategory = new Category(req.body);
         const savedCategory = await newCategory.save();
 
         res.status(201).json({
             status: 'success',
             data: savedCategory
         });
-    } catch (error) {
-        res.status(400).json({
-            status: 'error',
-            message: error.message
-        });
+});
+
+exports.getAllCategories = catchAsync(async (req, res, next) => {
+    const categories = await Category.find()
+        .populate('subCategories')
+        .populate('items');
+
+    res.status(200).json({
+        status: 'success',
+        count: categories.length,
+        data: categories
+    });
+});
+
+exports.getCategoryById = catchAsync(async (req, res, next) => {
+    const category = await Category.findById(req.params.id)
+        .populate('subCategories')
+        .populate('items');
+
+    if(!category){
+        return next(new AppError('Category not found', 404));
     }
-};
 
-exports.getAllCategories = async (req, res) => {
-    try {
-        const categories = await Category.find()
-            .populate('subCategories')
-            .populate('items');
+    res.status(200).json({
+        status: 'success',
+        data: category
+    });
+});
 
-        res.status(200).json({
-            status: 'success',
-            count: categories.length,
-            data: categories
-        });
-    } catch (error) {
-        res.status(500).json({
-            status: 'error',
-            message: error.message
-        });
+exports.getCategoryByName = catchAsync(async (req, res, next) => {
+    const category = await Category.findOne({ name: req.params.name })
+        .populate('subCategories')
+        .populate('items');
+
+    if(!category){
+        return next(new AppError('Category not found', 404));
     }
-};
 
-exports.getCategoryById = async (req, res) => {
-    try {
-        const category = await Category.findById(req.params.id)
-            .populate('subCategories')
-            .populate('items');
+    res.status(200).json({
+        status: 'success',
+        data: category
+    });
+});
 
-        if(!category){
-            return res.status(404).json({
-                status: 'error',
-                message: 'Category not found'
-            });
-        }
+exports.updateCategory = catchAsync(async (req, res, next) => {
+    const updatedCategory = await Category.findByIdAndUpdate(
+        req.params.id,
+        req.body,
+        { new: true, runValidators: true }
+    );
 
-        res.status(200).json({
-            status: 'success',
-            data: category
-        })
-    } catch (error) {
-        res.status(500).json({
-            status: 'error',
-            message: error.message
-        });
+    if(!updatedCategory){
+        return next(new AppError('Category not found', 404));
     }
-};
 
-exports.getCategoryByName = async (req, res) => {
-    try {
-        const category = await Category.findOne({ name: req.params.name })
-            .populate('subCategories')
-            .populate('items');
+    res.status(200).json({
+        status: 'success',
+        data: updatedCategory
+    });
+});
 
-        if(!category){
-            return res.status(404).json({
-                status: 'error',
-                message: 'Category not found'
-            });
-        }
+exports.deleteCategory = catchAsync(async (req, res, next) => {
+    // find the category
+    const category = await Category.findById(req.params.id);
 
-        res.status(200).json({
-            status: 'success',
-            data: category
-        });
-    } catch (error) {
-        res.status(500).json({
-            status: 'error',
-            message: error.message
-        });
+    if(!category){
+        return next(new AppError('Category not found', 404));
     }
-};
 
-exports.updateCategory = async (req, res) => {
-    try {
-        const updatedCategory = await Category.findByIdAndUpdate(
-            req.params.id,
-            req.body,
-            { new: true, runValidators: true }
-        );
+    // delete associated subcategories
+    await SubCategory.deleteMany({ category: req.params.id });
 
-        if(!updatedCategory){
-            return res.status(404).json({
-                status: 'error',
-                message: 'Category not found'
-            });
-        }
+    // delete associated items
+    await Item.deleteMany({ category: req.params.id });
 
-        res.status(200).json({
-            status: 'success',
-            data: updatedCategory
-        });
-    } catch (error) {
-        res.status(400).json({
-            status: 'error',
-            message: error.message
-        });
-    }
-};
+    //delete the category
+    await Category.findByIdAndDelete(req.params.id);
 
-exports.deleteCategory = async (req, res) => {
-    try {
-        // find the category
-        const category = await Category.findById(req.params.id);
-
-        if(!category){
-            return res.status(404).json({
-                status: 'error',
-                message: 'Category not found'
-            });
-        }
-
-        // delete associated subcategories
-        await SubCategory.deleteMany({ category: req.params.id });
-
-        // delete associated items
-        await Item.deleteMany({ category: req.params.id });
-
-        //delete the category
-        await Category.findByIdAndDelete(req.params.id);
-
-        res.status(200).json({
-            status: 'success',
-            message: 'Category and associated data deleted'
-        });
-    } catch (error) {
-        res.status(500).json({
-            status: 'error',
-            message: error.message
-        });
-    }
-};
+    res.status(200).json({
+        status: 'success',
+        message: 'Category and associated data deleted'
+    });
+});
