@@ -1,6 +1,8 @@
 # Menu Management:
 This is the backend server for a menu management application built using Node.js and Express.js. The application allows users to manage categories, subcategories, and items within a menu.
 
+- Live : https://menu-management-backend-pj2c.onrender.com
+
 ## Tech Stack
 - Nodejs
 - Express
