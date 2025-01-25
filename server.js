@@ -22,6 +22,12 @@ app.use(bodyParser.json());
 app.use(cors());
 app.use(express.json());
 
+// app.use((req, res, next) => {
+//     console.log(`Incoming ${req.method} request to ${req.path}`);
+//     console.log('Request Body:', req.body);
+//     next();
+// });
+
 
 //routes
 app.use('/api/categories', categoryRoutes);

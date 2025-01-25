@@ -37,7 +37,7 @@ const ItemSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    totalAamount: {
+    totalAmount: {
         type: Number,
         required: true
     }

@@ -56,17 +56,17 @@ exports.getSubCategoriesByCategory = catchAsync(async (req, res, next) => {
 });
 
 exports.getSubCategoryById = catchAsync(async (req, res, next) => {
-    const SubCategory = await SubCategory.findById(req.params.id)
+    const subCategory = await SubCategory.findById(req.params.id)
         .populate('category')
         .populate('items');
 
-    if(!SubCategory){
+    if(!subCategory){
         return next(new AppError('SubCategory not found', 404));
     }
 
     res.status(200).json({
         status: 'success',
-        data: SubCategory
+        data: subCategory
     });
 });
 

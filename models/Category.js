@@ -24,7 +24,7 @@ const CategorySchema = new mongoose.Schema({
     },
     taxType: {
         type: String,
-        enum: ['precentage', 'flat'],
+        enum: ['percentage', 'flat'],
         default: 'percentage'
     },
     subCategories: [{
